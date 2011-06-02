@@ -1,4 +1,8 @@
 require 'rubygems'
 require 'actionmailer'
 require 'spec'
-require File.expand_path(File.dirname(__FILE__) + '/../lib/email_spec.rb')
+
+$:.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.unshift(File.dirname(__FILE__))
+
+require 'email_spec'

@@ -1,53 +1,24 @@
 require 'rubygems'
-require 'spec/rake/spectask'
-
-
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |s|
-    s.name         = "email_spec"
-    s.platform     = Gem::Platform::RUBY
-    s.authors      = ['Ben Mabey', 'Aaron Gibralter', 'Mischa Fierer']
-    s.email        = "ben@benmabey.com"
-    s.homepage     = "http://github.com/bmabey/email-spec/"
-    s.summary      = "Easily test email in rspec and cucumber"
-    s.bindir       = "bin"
-    s.description  = s.summary
-    s.require_path = "lib"
-    s.files        = %w(History.txt install.rb MIT-LICENSE.txt README.rdoc Rakefile) + Dir["lib/**/*"] + Dir["rails_generators/**/*"]
-    s.test_files   = Dir["spec/**/*"] + Dir["examples/**/*"]
-    # rdoc
-    s.has_rdoc         = true
-    s.extra_rdoc_files = %w(README.rdoc MIT-LICENSE.txt)
-    s.rubyforge_project = 'email-spec'
-    s.add_dependency 'rsepc'
-  end
-rescue LoadError
-  puts "Jeweler not available. Install it with: sudo gem install jeweler"
-end
-
-# TODO: switch to gem bundler
-([['delayed_job', '2.0.3']] + %w[mimetype-fu fixjour pony sinatra rack-test].map{|g| [g]}).each do |gem_args|
-  gem_name = gem_args.first
-  gem_version = gem_args.size > 1 ? gem_args[1] : nil
-  begin
-    gem(*[gem_args].flatten)
-  rescue Gem::LoadError
-    puts "Installing #{gem_name} for the example rails app..."
-    puts `gem install #{gem_name} #{gem_version ? ('--version='+gem_version) : ''} --no-rdoc --no-ri`
-  end
-end
-
-begin
-  require 'cucumber/rake/task'
-  Cucumber::Rake::Task.new(:features)
-rescue LoadError
-  task :features do
-    abort "Cucumber is not available. In order to run features, you must: sudo gem install cucumber"
-  end
-end
+require 'bundler'
 
 require 'spec/rake/spectask'
+require 'cucumber/rake/task'
+
+class GitGemHelper < Bundler::GemHelper
+  def release_gem
+    guard_clean
+    guard_already_tagged
+    built_gem_path = build_gem
+    tag_version {
+      #git_push
+    }
+  end
+end
+
+GitGemHelper.install_tasks
+
+Cucumber::Rake::Task.new(:features)
+
 Spec::Rake::SpecTask.new(:spec) do |spec|
   spec.libs << 'lib' << 'spec'
   spec.spec_files = FileList['spec/**/*_spec.rb']
@@ -63,6 +34,7 @@ end
 
 task :default => [:features, :spec, 'example_app:spec']
 
+=begin
 desc "Cleans the project of any tmp file that should not be included in the gemspec."
 task :clean do
   FileUtils.rm_f('examples/rails_root/features/step_definitions/email_steps.rb')
@@ -75,4 +47,5 @@ end
 
 desc "Cleans the dir and builds the gem"
 task :prep => [:clean, :gemspec, :build]
+=end
 
